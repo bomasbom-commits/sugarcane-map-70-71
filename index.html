@@ -75,7 +75,7 @@
     .sub-list { list-style: none; display: none; padding: 2px 0 2px 10px; background: #ffffff; border-top: 1px solid #e0e0e0; }
     .sub-node { margin: 2px 0; }
     
-    /* ตรึงหัวข้อกลุ่มรถตัด ให้อยู่ซ้อนใต้กลุ่มคิวหลัก */
+    /* ตรึงหัวข้อกลุ่มย่อย ให้อยู่ซ้อนใต้กลุ่มหลัก */
     .sub-header { 
       padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; 
       cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; background: #ffffff; 
@@ -177,7 +177,7 @@
     <div class="sidebar-header">
       <div>
         <h2>แผนที่แปลงอ้อยรถไถปี 70/71 </h2>
-        <p>กลุ่มคิว > กลุ่มย่อย > รหัสแปลง</p>
+        <p>กลุ่ม > กลุ่มย่อย > รหัสแปลง</p>
       </div>
       <button id="btnCloseSidebar" class="btn-close-sidebar">✕</button>
     </div>
@@ -223,7 +223,7 @@
     <div class="sidebar-content">
       <div>
         <div class="tree-title">
-          <span>🗂️ กลุ่มรถตัด (<span id="totalPlotsCount">0</span> แปลง)</span>
+          <span>🗂️ กลุ่ม (<span id="totalPlotsCount">0</span> แปลง)</span>
           <label style="cursor: pointer; font-size: 11px; font-weight: normal; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; border: 1px solid #bbdefb; color: #0d47a1; display: inline-flex; align-items: center; gap: 4px;">
             <input type="checkbox" id="selectAllGroups" checked /> <span id="selectAllText">เปิดทั้งหมด</span>
           </label>
@@ -245,7 +245,7 @@
       <div class="modal-body">
         <div id="emptyLogText" style="text-align:center; color:#888; padding:20px;">ยังไม่มีการย้ายกลุ่มแปลง</div>
         <table id="logTable" style="display:none;">
-          <thead><tr><th>รหัสแปลง</th><th>กลุ่มคิวเดิม</th><th>➔ กลุ่มคิวใหม่</th><th>จัดการ</th></tr></thead>
+          <thead><tr><th>รหัสแปลง</th><th>กลุ่มเดิม</th><th>➔ กลุ่มใหม่</th><th>จัดการ</th></tr></thead>
           <tbody id="logTableBody"></tbody>
         </table>
       </div>
@@ -606,7 +606,7 @@
     /* KML Parsing */
     let globalPlotCounter = 0;
     function processKmlXml(xmlDoc, defaultFileName) {
-      let fName = defaultFileName.split('/').pop().replace(/\.kml$/i, ''), numMatch = fName.match(/\d+/), fallbackGroup = numMatch ? `กลุ่มคิว ${numMatch[0]}` : fName;
+      let fName = defaultFileName.split('/').pop().replace(/\.kml$/i, ''), numMatch = fName.match(/\d+/), fallbackGroup = numMatch ? `กลุ่ม ${numMatch[0]}` : fName;
       const pMap = {}, placemarks = xmlDoc.getElementsByTagName('Placemark');
       
       for (let i = 0; i < placemarks.length; i++) {
@@ -639,7 +639,7 @@
       toGeoJSON.kml(xmlDoc).features.forEach((feature, idx) => {
         let props = feature.properties = Object.assign(feature.properties || {}, pMap[feature.properties.name] || pMap[`idx_${idx}`] || {});
         let subGroup = props['รหัสกลุ่มคิว'] || props['รหัสกลุ่ม'] || props['sub_group'] || props['SUB_GROUP'] || (JSON.stringify(props).match(/\b(\d{2,3}[\/_]\d{3,4})\b/)||[])[1] || 'ทั่วไป';
-        let mainGroup = fallbackGroup; if(subGroup.includes('/')) mainGroup = `กลุ่มคิว ${subGroup.split('/')[0]}`; else if(subGroup.includes('_')) mainGroup = `กลุ่มคิว ${subGroup.split('_')[0]}`;
+        let mainGroup = fallbackGroup; if(subGroup.includes('/')) mainGroup = `กลุ่ม ${subGroup.split('/')[0]}`; else if(subGroup.includes('_')) mainGroup = `กลุ่ม ${subGroup.split('_')[0]}`;
         
         const contractor = extractContractorName(props), plotName = props['รหัสแปลง'] || props['PLOT_ID'] || props.name || 'ไม่มีรหัส', uniqueId = `plot_li_${++globalPlotCounter}`;
         const subKey = `${mainGroup}:::${subGroup}`; allKnownSubKeys.add(subKey);
@@ -812,7 +812,7 @@
     document.getElementById('btnCloseModalBtn').onclick = () => logModal.style.display = 'none';
     document.getElementById('btnExportCSV').onclick = () => {
       const movedIds = Object.keys(scenarios[currentScenarioId]?.overrides || {}); if(movedIds.length===0){ alert('ไม่มีรายการย้าย'); return; }
-      let csv = '\uFEFFรหัสแปลง,กลุ่มคิวเดิม,กลุ่มคิวใหม่,สถานะ\n'; movedIds.forEach(id => { const p=plotRegistry[id]; if(p) csv += `"${p.name}","${p.origSubKey.replace(':::', ' > ')}","${p.subKey.replace(':::', ' > ')}","ย้ายแล้ว"\n`; });
+      let csv = '\uFEFFรหัสแปลง,กลุ่มเดิม,กลุ่มใหม่,สถานะ\n'; movedIds.forEach(id => { const p=plotRegistry[id]; if(p) csv += `"${p.name}","${p.origSubKey.replace(':::', ' > ')}","${p.subKey.replace(':::', ' > ')}","ย้ายแล้ว"\n`; });
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `รายการย้าย_${scenarios[currentScenarioId].name.replace(/[^a-zA-Z0-9ก-๙]/g, '_')}.csv`; a.click();
     };
 
