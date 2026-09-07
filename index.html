@@ -30,7 +30,7 @@
     /* ส่วนควบคุมที่ตรึงไว้ด้านบน */
     .sidebar-controls { padding: 12px 12px 0 12px; display: flex; flex-direction: column; gap: 10px; background: #ffffff; z-index: 30; border-bottom: 1px solid #e0e0e0; padding-bottom: 12px; }
     
-    /* ส่วนรายการที่สามารถเลื่อนได้ */
+    /* ส่วนรายการที่สามาเลื่อนได้ */
     .sidebar-content { flex: 1; padding: 12px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; position: relative; }
 
     /* Scenario Box */
@@ -532,7 +532,7 @@
     function extractContractorName(props) {
       const contractorKeys = [
         'ชื่อ-สกุล รับเหมา', 'ชื่อผู้รับเหมา', 'ผู้รับเหมา', 'ชื่อ_สกุล_รับเหมา', 
-        'CONTRACTOR', 'Contractor', 'contractor', 'ชื่อคนตัด', 'คนตัด'
+        'CONTRACTOR', 'Contractor', 'contractor', 'ชื่อคน', 'คนไถ'
       ];
       for (let k of contractorKeys) {
         if (props[k] && String(props[k]).trim() !== '') return String(props[k]).trim();
