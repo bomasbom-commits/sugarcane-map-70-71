@@ -7,170 +7,281 @@
   <meta property="og:title" content="แปลงอ้อยรถไถ">
   <meta property="og:description" content="ระบบจัดการแปลงอ้อย จัดกลุ่มคิว และวางแผนการตัด">
 
+  <!-- Google Fonts: Sarabun & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Tahoma, 'Sarabun', sans-serif; display: flex; height: 100vh; width: 100vw; overflow: hidden; position: relative; background: #e0e0e0; }
-
-    /* ปุ่มเปิดเมนูด้านซ้าย */
-    .mobile-menu-btn {
-      display: none; position: absolute; top: 10px; left: 55px; z-index: 1100;
-      background: #1565C0; color: white; border: none; border-radius: 6px;
-      padding: 8px 12px; font-size: 13px; font-weight: 600;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.35); cursor: pointer;
+    :root {
+      --primary: #1565C0;
+      --primary-gradient: linear-gradient(135deg, #1e88e5 0%, #0d47a1 100%);
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.18);
+      --glass-dark-bg: rgba(23, 32, 42, 0.88);
+      --glass-dark-border: rgba(255, 255, 255, 0.15);
+      --surface: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
     }
 
-    .sidebar-overlay { display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Sarabun', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+      display: flex; height: 100vh; width: 100vw; overflow: hidden; position: relative; 
+      background: #0f172a; color: var(--text-main);
+    }
 
-    #sidebar { width: 380px; height: 100%; background: #ffffff; box-shadow: 2px 0 10px rgba(0,0,0,0.15); display: flex; flex-direction: column; z-index: 2000; transition: transform 0.3s ease; }
-    .sidebar-header { padding: 14px 16px; background: #1565C0; color: white; display: flex; justify-content: space-between; align-items: center; }
-    .sidebar-header h2 { font-size: 16px; font-weight: 600; }
-    .sidebar-header p { font-size: 11px; opacity: 0.85; margin-top: 2px; }
-    .btn-close-sidebar { display: none; background: none; border: none; color: white; font-size: 20px; cursor: pointer; line-height: 1; }
-    
-    .sidebar-controls { padding: 12px 12px 0 12px; display: flex; flex-direction: column; gap: 10px; background: #ffffff; z-index: 30; border-bottom: 1px solid #e0e0e0; padding-bottom: 12px; }
-    .sidebar-content { flex: 1; padding: 12px; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; position: relative; }
+    .mobile-menu-btn {
+      display: none; position: absolute; top: 12px; left: 12px; z-index: 1200;
+      background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      color: #0f172a; border: 1px solid var(--glass-border); border-radius: 12px;
+      padding: 8px 14px; font-size: 13px; font-weight: 600;
+      box-shadow: var(--glass-shadow); cursor: pointer; transition: all 0.2s;
+    }
+    .mobile-menu-btn:hover { background: #ffffff; transform: translateY(-1px); }
 
-    /* Scenario Box */
-    .scenario-box { background: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
-    .scenario-box-title { font-size: 12px; font-weight: bold; color: #F57F17; display: flex; justify-content: space-between; align-items: center; }
-    .scenario-select { width: 100%; padding: 6px 8px; font-size: 12px; border-radius: 4px; border: 1px solid #FFD54F; font-weight: bold; outline: none; background: white; }
+    .sidebar-overlay { 
+      display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; 
+      background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); 
+      z-index: 1999; 
+    }
+
+    #sidebar { 
+      width: 380px; height: 100%; background: #ffffff; 
+      box-shadow: 4px 0 25px rgba(0,0,0,0.12); display: flex; flex-direction: column; 
+      z-index: 2000; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .sidebar-header { 
+      padding: 14px 18px; background: var(--primary-gradient); color: white; 
+      display: flex; justify-content: space-between; align-items: center; 
+      box-shadow: 0 4px 12px rgba(13, 71, 161, 0.25);
+    }
+    .sidebar-header h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
+    .sidebar-header p { font-size: 11px; opacity: 0.9; margin-top: 2px; font-weight: 400; }
+    .btn-close-sidebar { display: none; background: rgba(255,255,255,0.15); border: none; color: white; width: 30px; height: 30px; border-radius: 8px; font-size: 16px; cursor: pointer; line-height: 1; transition: background 0.2s; }
+    .btn-close-sidebar:hover { background: rgba(255,255,255,0.3); }
+
+    .sidebar-controls { 
+      padding: 12px 14px 10px 14px; display: flex; flex-direction: column; gap: 8px; 
+      background: #f8fafc; z-index: 30; border-bottom: 1px solid #e2e8f0; 
+    }
+    .sidebar-content { 
+      flex: 1; padding: 12px 14px; overflow-y: auto; overflow-x: hidden; 
+      display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; 
+      position: relative; background: #ffffff; 
+    }
+
+    /* กล่องสรุปภาพรวม KPI (แปลง & ไร่รวม) */
+    .kpi-container {
+      display: flex; gap: 8px; margin-bottom: 2px;
+    }
+    .kpi-card {
+      flex: 1; background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: 7px 10px; display: flex; flex-direction: column; gap: 2px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .kpi-title { font-size: 11px; color: #64748b; font-weight: 600; }
+    .kpi-value { font-size: 15px; font-weight: 700; color: #0f172a; }
+
+    /* Scenario Card Glass Style */
+    .scenario-box { 
+      background: linear-gradient(145deg, #fffdf5 0%, #fff8e1 100%); 
+      border: 1px solid rgba(255, 213, 79, 0.5); border-radius: 10px; 
+      padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; 
+      box-shadow: 0 2px 6px rgba(245, 127, 23, 0.06); 
+    }
+    .scenario-box-title { font-size: 11.5px; font-weight: 700; color: #b45309; display: flex; justify-content: space-between; align-items: center; }
+    .scenario-select { width: 100%; padding: 6px 8px; font-size: 12px; border-radius: 6px; border: 1px solid #fde047; font-weight: 600; outline: none; background: white; color: #1e293b; }
     .scenario-actions { display: flex; gap: 6px; }
-    .btn-sc-action { flex: 1; padding: 4px 6px; font-size: 11px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    .btn-sc-action { flex: 1; padding: 5px 8px; font-size: 11px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+    .btn-sc-action:hover { filter: brightness(1.05); transform: translateY(-1px); }
 
-    .progress-box { background: #E3F2FD; border: 1px solid #BBDEFB; border-radius: 8px; padding: 10px 12px; }
-    .progress-text { font-size: 12px; font-weight: bold; color: #0D47A1; display: flex; justify-content: space-between; margin-bottom: 5px; }
-    .progress-bar-bg { width: 100%; height: 6px; background: #E0E0E0; border-radius: 3px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; width: 0%; background: #1976D2; transition: width 0.3s; }
-    #errorMessage { display: none; background: #ffebee; color: #c62828; padding: 12px; border-radius: 6px; font-size: 12px; border: 1px solid #ef9a9a; line-height: 1.5; }
+    .progress-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 8px 10px; }
+    .progress-text { font-size: 11px; font-weight: 600; color: #0369a1; display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .progress-bar-bg { width: 100%; height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; width: 0%; background: #0284c7; transition: width 0.3s ease; }
+    #errorMessage { display: none; background: #fef2f2; color: #991b1b; padding: 10px; border-radius: 8px; font-size: 11.5px; border: 1px solid #fecaca; line-height: 1.4; }
 
     .search-box { position: relative; }
-    .search-input { width: 100%; padding: 9px 12px; border: 1px solid #cfd8dc; border-radius: 6px; font-size: 13px; outline: none; }
-    .search-input:focus { border-color: #1976D2; box-shadow: 0 0 0 2px rgba(25,118,210,0.2); }
-    .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 6px; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: none; z-index: 2002; }
-    .search-item { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 12px; }
-    .search-item:hover { background: #e3f2fd; }
+    .search-input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; outline: none; background: white; transition: all 0.2s; }
+    .search-input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+    .search-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: white; border-radius: 8px; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; display: none; z-index: 2002; }
+    .search-item { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 12px; transition: background 0.15s; }
+    .search-item:hover { background: #f0f9ff; }
 
-    .filter-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+    .filter-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .filter-label { font-size: 11px; font-weight: 600; color: #475569; display: flex; justify-content: space-between; align-items: center; }
-    .filter-select { width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 12px; outline: none; background: white; color: #1e293b; font-family: inherit; }
+    .filter-select { width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: white; color: #1e293b; }
 
-    .tree-title { font-size: 13px; font-weight: bold; color: #37474f; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .tree-root { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .tree-title { font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .tree-root { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     
-    .group-node { border: 1px solid #d0d7de; border-radius: 6px; background: #ffffff; }
+    .group-node { 
+      border: 1px solid #e2e8f0; 
+      border-radius: 10px; 
+      background: #ffffff; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04); 
+    }
     
     .group-header { 
-      padding: 8px 10px; background: #f6f8fa; display: flex; align-items: center; justify-content: space-between; 
-      cursor: pointer; user-select: none; font-weight: 600; font-size: 13px; 
-      position: sticky; top: -12px; z-index: 20; 
-      border-radius: 5px 5px 0 0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); 
+      padding: 8px 12px; 
+      background: #f8fafc; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      cursor: pointer; 
+      user-select: none; 
+      font-weight: 600; 
+      font-size: 12.5px; 
+      position: sticky; 
+      top: -12px;
+      z-index: 25; 
+      border-radius: 9px 9px 0 0;
+      border-bottom: 1px solid #e2e8f0; 
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      transition: background 0.15s;
     }
-    .group-header:hover { background: #eef2f6; }
+    .group-header:hover { background: #f1f5f9; }
     
-    .sub-list { list-style: none; display: none; padding: 2px 0 2px 10px; background: #ffffff; border-top: 1px solid #e0e0e0; }
+    .sub-list { list-style: none; display: none; padding: 3px 0 3px 8px; background: #ffffff; }
     .sub-node { margin: 2px 0; }
     
     .sub-header { 
-      padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; 
-      cursor: pointer; font-size: 12px; font-weight: 500; border-radius: 4px; background: #ffffff; 
-      position: sticky; top: 25px; z-index: 15; 
-      border-bottom: 1px solid #f0f0f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
+      padding: 6px 8px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      cursor: pointer; 
+      font-size: 11.5px; 
+      font-weight: 500; 
+      border-radius: 6px; 
+      background: #ffffff; 
+      position: sticky; 
+      top: 24px;
+      z-index: 20; 
+      border-bottom: 1px solid #f1f5f9;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      transition: background 0.15s;
     }
-    .sub-header:hover { background: #f0f4f8; }
+    .sub-header:hover { background: #f8fafc; }
     
-    .plot-list { list-style: none; display: none; padding: 2px 0 2px 16px; }
-    .plot-item { padding: 5px 8px; font-size: 12px; color: #1565c0; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 5px; justify-content: space-between; transition: background 0.3s, transform 0.2s; }
-    .plot-item:hover { background: #e3f2fd; color: #0d47a1; font-weight: 600; }
-    .plot-item.active-tree-plot { background: #ffe082 !important; color: #b78103 !important; font-weight: bold; border: 1px solid #ffd54f; transform: translateX(4px); }
+    .plot-list { list-style: none; display: none; padding: 2px 0 4px 16px; }
+    .plot-item { padding: 4px 8px; font-size: 11.5px; color: #0284c7; cursor: pointer; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; transition: all 0.15s; }
+    .plot-item:hover { background: #e0f2fe; color: #0369a1; font-weight: 600; }
+    .plot-item.active-tree-plot { background: #fef08a !important; color: #854d0e !important; font-weight: 700; border: 1px solid #facc15; transform: translateX(3px); }
 
-    .node-left { display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .node-left { display: flex; align-items: center; gap: 7px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
     .sub-title-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .color-dot { display: inline-block; width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; cursor: pointer; border: 1px solid rgba(0,0,0,0.2); transition: transform 0.1s; }
+    .color-dot { display: inline-block; width: 13px; height: 13px; border-radius: 4px; flex-shrink: 0; cursor: pointer; border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.15s; }
     .color-dot:hover { transform: scale(1.2); }
     .color-picker-input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 
-    .caret { transition: transform 0.2s; font-size: 9px; color: #666; display: inline-block; width: 12px; flex-shrink: 0; }
+    .caret { transition: transform 0.2s; font-size: 9px; color: #94a3b8; display: inline-block; width: 12px; flex-shrink: 0; }
     .caret.open { transform: rotate(90deg); }
-    .badge { background: #e0e0e0; color: #37474f; padding: 1px 6px; border-radius: 10px; font-size: 10.5px; font-weight: bold; }
-    .badge-moved { background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; font-size: 9px; padding: 1px 4px; border-radius: 4px; }
+    
+    /* ป้ายตัวเลขสถิติ ไร่/แปลง */
+    .badge-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .badge { background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+    .badge-rai { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 10px; font-size: 9.5px; font-weight: 700; }
+    .badge-moved { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; font-size: 9px; padding: 1px 4px; border-radius: 4px; font-weight: 600; }
 
     #map { flex: 1; height: 100%; width: 100%; background: #cdd5d8; }
 
-    .leaflet-popup-content { margin: 12px; min-width: 260px; line-height: 1.4; max-height: 380px; overflow-y: auto; }
-    .leaflet-popup-content table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px !important; }
-    .leaflet-popup-content th, .leaflet-popup-content td { border: 1px solid #ccc; padding: 5px 7px; text-align: left; }
-    .leaflet-popup-content td:first-child { background-color: #f2f7fc; font-weight: bold; width: 40%; color: #333; }
-    .leaflet-popup-content td:nth-child(2) { color: #111; word-break: break-all; }
+    .top-controls-container { 
+      position: absolute; top: 14px; right: 170px; z-index: 1100; 
+      display: flex; gap: 8px; 
+    }
+    .top-ctrl-btn { 
+      background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border); padding: 8px 14px; border-radius: 12px; 
+      font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: var(--glass-shadow); 
+      display: flex; align-items: center; gap: 5px; color: #1e293b; transition: all 0.2s ease;
+    }
+    .top-ctrl-btn:hover { background: #ffffff; transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,0.22); }
+    .top-ctrl-btn.active { background: #e11d48; color: white; border-color: #be123c; }
+    .top-ctrl-btn.active-reassign { background: #16a34a; color: white; border-color: #15803d; }
+    .top-ctrl-btn.btn-help { background: #0284c7; color: white; border-color: rgba(255,255,255,0.3); }
 
-    .btn-measure-popup { margin-top: 8px; width: 100%; background: #E91E63; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-    .btn-measure-popup:hover { background: #C2185B; }
-    .transfer-box { margin-top: 8px; padding: 8px; background: #F1F8E9; border: 1px solid #C5E1A5; border-radius: 6px; }
-    .transfer-box select { width: 100%; padding: 4px; font-size: 11px; margin-top: 4px; border-radius: 4px; border: 1px solid #9CCC65; outline: none; }
-    .btn-transfer-popup { margin-top: 6px; width: 100%; background: #43A047; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
-    .btn-reset-plot { margin-top: 4px; width: 100%; background: #FF9800; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .top-floating-panel { 
+      display: none; position: absolute; top: 14px; left: 50%; transform: translateX(-50%); 
+      z-index: 1200; background: var(--glass-dark-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      color: white; padding: 8px 16px; border-radius: 30px; font-size: 12.5px; font-weight: 500; 
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45); border: 1px solid var(--glass-dark-border); 
+      align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; 
+    }
+    .top-floating-panel button { border: none; padding: 4px 11px; border-radius: 16px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.15s; }
+    .top-floating-panel button:hover { filter: brightness(1.1); transform: scale(1.03); }
 
-    /* ปรับแต่งตำแหน่งปุ่มบนหน้าจอคอมพิวเตอร์ */
-    .top-controls-container { position: absolute; top: 12px; right: 170px; z-index: 1100; display: flex; gap: 8px; }
-    .top-ctrl-btn { background: white; border: 1px solid #bbb; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 4px; color: #333; }
-    .top-ctrl-btn:hover { background: #f5f5f5; }
-    .top-ctrl-btn.active { background: #E91E63; color: white; border-color: #C2185B; }
-    .top-ctrl-btn.active-reassign { background: #2E7D32; color: white; border-color: #1B5E20; }
-    .top-ctrl-btn.btn-help { background: #0288D1; color: white; border-color: #0277BD; }
-
-    /* แผงลอยวัดระยะ / จัดกลุ่มด่วน */
-    .top-floating-panel { display: none; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 1200; background: rgba(33, 33, 33, 0.95); color: white; padding: 8px 16px; border-radius: 24px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 14px rgba(0,0,0,0.35); align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
-    .top-floating-panel button { border: none; padding: 4px 10px; border-radius: 12px; cursor: pointer; font-size: 11px; font-weight: 600; }
-    .measure-tooltip { background: #e91e63; border: 1px solid #ffffff; color: white; font-weight: bold; font-size: 11px; padding: 2px 6px; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-    .measure-tooltip:before { border-top-color: #e91e63; }
+    .measure-tooltip { background: #e11d48; border: 1px solid #ffffff; color: white; font-weight: 700; font-size: 11px; padding: 3px 8px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .measure-tooltip:before { border-top-color: #e11d48; }
     .measuring-mode .leaflet-popup-pane { display: none !important; }
     .measuring-mode, .measuring-mode * { cursor: crosshair !important; }
 
-    /* Modal */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 3000; align-items: center; justify-content: center; }
-    .modal-box { background: white; border-radius: 8px; width: 92%; max-width: 650px; max-height: 82vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.35); }
-    .modal-header { padding: 12px 16px; background: #1565C0; color: white; display: flex; justify-content: space-between; align-items: center; }
-    .modal-body { padding: 14px 16px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.5; color: #333; }
-    .modal-body table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-    .modal-body th, .modal-body td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
-    .modal-body th { background: #f5f5f5; }
-    .modal-footer { padding: 10px 16px; background: #f9f9f9; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; }
-    .guide-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
-    .guide-title { font-size: 13px; font-weight: bold; color: #0d47a1; margin-bottom: 3px; }
-    .guide-desc { font-size: 12px; color: #475569; }
+    .modal-overlay { 
+      display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+      background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); 
+      z-index: 3000; align-items: center; justify-content: center; 
+    }
+    .modal-box { 
+      background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+      border-radius: 16px; width: 92%; max-width: 660px; max-height: 82vh; 
+      display: flex; flex-direction: column; overflow: hidden; 
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid rgba(255,255,255,0.6);
+      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); 
+    }
+    @keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    /* ==========================================================
-       CSS ปรับแต่งหน้าจอมือถือโดยเฉพาะ (Mobile Responsive)
-       ========================================================== */
+    .modal-header { padding: 14px 20px; background: var(--primary-gradient); color: white; display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.55; color: #334155; }
+    .modal-body table { width: 100%; border-collapse: collapse; margin-top: 8px; border-radius: 8px; overflow: hidden; }
+    .modal-body th, .modal-body td { border: 1px solid #e2e8f0; padding: 7px 10px; text-align: left; }
+    .modal-body th { background: #f8fafc; font-weight: 600; }
+    .modal-footer { padding: 12px 20px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; }
+    
+    .guide-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .guide-title { font-size: 13px; font-weight: 700; color: #0284c7; margin-bottom: 4px; }
+    .guide-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
+
+    .leaflet-popup-content-wrapper { border-radius: 14px; box-shadow: 0 12px 30px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.05); }
+    .leaflet-popup-content { margin: 14px; min-width: 260px; line-height: 1.4; max-height: 380px; overflow-y: auto; }
+    .leaflet-popup-content table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11.5px !important; }
+    .leaflet-popup-content th, .leaflet-popup-content td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
+    .leaflet-popup-content td:first-child { background-color: #f8fafc; font-weight: 600; width: 42%; color: #475569; }
+    .btn-measure-popup { margin-top: 8px; width: 100%; background: #e11d48; color: white; border: none; padding: 7px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .btn-measure-popup:hover { background: #be123c; }
+    .transfer-box { margin-top: 10px; padding: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; }
+    .transfer-box select { width: 100%; padding: 6px; font-size: 11.5px; margin-top: 4px; border-radius: 6px; border: 1px solid #86efac; outline: none; background: white; }
+    .btn-transfer-popup { margin-top: 6px; width: 100%; background: #16a34a; color: white; border: none; padding: 6px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+    .btn-reset-plot { margin-top: 5px; width: 100%; background: #f97316; color: white; border: none; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
+
     @media (max-width: 768px) {
-      .mobile-menu-btn { display: block; top: 10px; left: 10px; font-size: 12px; padding: 6px 12px; z-index: 1200; }
+      .mobile-menu-btn { display: block; }
       .btn-close-sidebar { display: block; }
-      
-      /* ปรับปุ่มซูมของ Leaflet ให้หลบลงมาไม่บังปุ่มเมนู */
-      .leaflet-top.leaflet-left { top: 45px; }
+      .leaflet-top.leaflet-left { top: 50px; }
 
-      /* ย้ายปุ่มควบคุมไปไว้ด้านล่างหน้าจอ (Bottom Bar) */
       .top-controls-container {
-        top: auto; bottom: 16px; left: 50%; right: auto;
+        top: auto; bottom: 18px; left: 50%; right: auto;
         transform: translateX(-50%); width: 92%; max-width: 400px;
-        justify-content: space-between; gap: 4px;
+        justify-content: space-between; gap: 6px;
       }
       .top-ctrl-btn {
-        flex: 1; justify-content: center; font-size: 11px; padding: 8px 4px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap;
+        flex: 1; justify-content: center; font-size: 11px; padding: 9px 4px;
+        border-radius: 14px;
       }
 
-      /* แผงจัดกลุ่มด่วน / ไม้บรรทัด บนมือถือให้ลงมาเกาะที่ด้านล่าง */
       .top-floating-panel {
-        top: auto; bottom: 65px; width: 92%; max-width: 380px;
-        padding: 8px 12px; font-size: 12px; border-radius: 12px;
+        top: auto; bottom: 72px; width: 92%; max-width: 380px;
+        padding: 8px 14px; font-size: 12px; border-radius: 16px;
       }
       .top-floating-panel select { max-width: 140px; }
 
-      #sidebar { position: absolute; top: 0; left: 0; width: 85%; max-width: 330px; transform: translateX(-100%); box-shadow: 4px 0 15px rgba(0,0,0,0.3); }
+      #sidebar { position: absolute; top: 0; left: 0; width: 85%; max-width: 330px; transform: translateX(-100%); }
       #sidebar.active { transform: translateX(0); }
       .sidebar-overlay.active { display: block; }
     }
@@ -181,7 +292,6 @@
   <button id="mobileMenuBtn" class="mobile-menu-btn">📂 แผนผังกลุ่ม</button>
   <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-  <!-- แถบปุ่มควบคุม (บนคอมอยู่บนขวา / บนมือถือจะลงมาอยู่ล่างจอ) -->
   <div class="top-controls-container">
     <button id="btnHelpGuide" class="top-ctrl-btn btn-help">❓ คู่มือ</button>
     <button id="btnQuickReassignMode" class="top-ctrl-btn">🔄 จัดกลุ่มด่วน</button>
@@ -189,15 +299,15 @@
   </div>
 
   <div id="measurePanel" class="top-floating-panel">
-    <span>📏 รวม: <b id="measureTotalDist" style="color: #4fc3f7;">0 ม.</b></span>
-    <button id="btnUndoMeasure" style="background:#FF9800; color:white;">↩️ ลบจุด</button>
-    <button id="btnClearMeasure" style="background:#E91E63; color:white;">🗑️ ล้าง</button>
-    <button id="btnExitMeasure" style="background:#555; color:white;">✕ ปิด</button>
+    <span>📏 ระยะรวม: <b id="measureTotalDist" style="color: #38bdf8;">0 ม.</b></span>
+    <button id="btnUndoMeasure" style="background:#f59e0b; color:white;">↩️ ลบจุด</button>
+    <button id="btnClearMeasure" style="background:#e11d48; color:white;">🗑️ ล้าง</button>
+    <button id="btnExitMeasure" style="background:#475569; color:white;">✕ ปิด</button>
   </div>
 
   <div id="reassignPanel" class="top-floating-panel">
-    <span>🎯 กลุ่ม: <select id="batchTargetGroupSelect" style="font-size:11px; padding:3px; border-radius:4px;"></select></span>
-    <button id="btnExitReassignMode" style="background:#555; color:white;">✕ ออก</button>
+    <span>🎯 จัดเข้ากลุ่ม: <select id="batchTargetGroupSelect" style="font-size:11px; padding:4px 8px; border-radius:6px; outline:none;"></select></span>
+    <button id="btnExitReassignMode" style="background:#475569; color:white;">✕ ออก</button>
   </div>
 
   <div id="sidebar">
@@ -210,15 +320,27 @@
     </div>
 
     <div class="sidebar-controls">
+      <!-- การ์ดสรุป KPI ด้านบนสุด -->
+      <div class="kpi-container">
+        <div class="kpi-card">
+          <span class="kpi-title">🚜 จำนวนแปลงทั้งหมด</span>
+          <span class="kpi-value" id="kpiTotalPlots">0 <span style="font-size:11px; font-weight:normal; color:#64748b;">แปลง</span></span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-title">🌾 เนื้อที่ปลูกรวม</span>
+          <span class="kpi-value" style="color:#047857;" id="kpiTotalRai">0.00 <span style="font-size:11px; font-weight:normal; color:#64748b;">ไร่</span></span>
+        </div>
+      </div>
+
       <div class="scenario-box">
         <div class="scenario-box-title">
           <span>📁 โปรเจกต์ / แผนงาน</span>
-          <span id="scenarioStatusBadge" style="font-size:10px; background:#FFE082; color:#5D4037; padding:1px 5px; border-radius:4px;">แผนจริง</span>
+          <span id="scenarioStatusBadge" style="font-size:10px; background:#fde68a; color:#92400e; padding:2px 6px; border-radius:5px;">แผนจริง</span>
         </div>
         <select id="scenarioSelector" class="scenario-select"></select>
         <div class="scenario-actions">
-          <button id="btnNewScenario" class="btn-sc-action" style="background:#43A047; color:white;">+ สร้างแผนใหม่</button>
-          <button id="btnDeleteScenario" class="btn-sc-action" style="background:#E53935; color:white; display:none;">ลบแผนนี้</button>
+          <button id="btnNewScenario" class="btn-sc-action" style="background:#16a34a; color:white;">+ สร้างแผนใหม่</button>
+          <button id="btnDeleteScenario" class="btn-sc-action" style="background:#dc2626; color:white; display:none;">ลบแผนนี้</button>
         </div>
       </div>
 
@@ -237,7 +359,7 @@
       <div class="filter-box">
         <div class="filter-label">
           <span>🚜 กรองตามผู้รับเหมา / นักเกษตร:</span>
-          <span id="contractorPlotCount" style="color:#1565C0; font-size:10px;"></span>
+          <span id="contractorPlotCount" style="color:#0284c7; font-size:10.5px; font-weight:700;"></span>
         </div>
         <select id="contractorSelect" class="filter-select">
           <option value="">-- แสดงทั้งหมด --</option>
@@ -248,8 +370,8 @@
     <div class="sidebar-content">
       <div>
         <div class="tree-title">
-          <span>🗂️ กลุ่มรถไถ (<span id="totalPlotsCount">0</span> แปลง)</span>
-          <label style="cursor: pointer; font-size: 11px; font-weight: normal; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; border: 1px solid #bbdefb; color: #0d47a1; display: inline-flex; align-items: center; gap: 4px;">
+          <span>🗂️ รายการกลุ่มรถไถ</span>
+          <label style="cursor: pointer; font-size: 11px; font-weight: normal; background: #f0f9ff; padding: 4px 8px; border-radius: 6px; border: 1px solid #bae6fd; color: #0369a1; display: inline-flex; align-items: center; gap: 4px;">
             <input type="checkbox" id="selectAllGroups" checked /> <span id="selectAllText">เปิดทั้งหมด</span>
           </label>
         </div>
@@ -264,33 +386,33 @@
   <div id="helpModal" class="modal-overlay">
     <div class="modal-box" onclick="event.stopPropagation();">
       <div class="modal-header">
-        <span style="font-weight:bold; font-size:15px;">📖 คำอธิบายฟังก์ชันการใช้งาน</span>
+        <span style="font-weight:700; font-size:15px;">📖 คำอธิบายฟังก์ชันการใช้งาน</span>
         <button id="btnCloseHelp" style="background:none; border:none; color:white; font-size:20px; cursor:pointer; line-height:1;">✕</button>
       </div>
       <div class="modal-body">
         <div class="guide-card">
           <div class="guide-title">📁 1. โปรเจกต์ / แผนงาน (Scenario)</div>
-          <div class="guide-desc">ใช้จำลองการจัดสรรแปลงใหม่โดยไม่กระทบข้อมูลจริง กด <b>"+ สร้างแผนใหม่"</b> เพื่อทดลองย้ายแปลงเปรียบเทียบแต่ละแผนงานได้</div>
+          <div class="guide-desc">ใช้จำลองการจัดสรรแปลงใหม่โดยไม่กระทบข้อมูลจริง สามารถสร้างแผนใหม่เพื่อทดลองย้ายแปลงเปรียบเทียบยอดไร่สะสมได้ทันที</div>
         </div>
         <div class="guide-card">
-          <div class="guide-title">🔄 2. จัดกลุ่มด่วน (Quick Reassign)</div>
-          <div class="guide-desc">เลือกกลุ่มเป้าหมาย แล้ว<b>จิ้มที่แปลงบนแผนที่ได้เลย</b> แปลงนั้นจะถูกย้ายเข้ากลุ่มทันที จัดแปลงง่ายและเร็วมาก</div>
+          <div class="guide-title">🌾 2. ระบบคำนวณยอดไร่สะสม Real-time</div>
+          <div class="guide-desc">ระบบจะรวมพื้นที่ปลูก (ไร่) ของแต่ละแปลงเข้าสู่กลุ่มย่อยและกลุ่มหลักโดยอัตโนมัติ หากมีการย้ายแปลง ตัวเลขจะคำนวณปรับปรุงใหม่ทันที</div>
         </div>
         <div class="guide-card">
-          <div class="guide-title">📋 3. รายการย้าย & ส่งออก Excel</div>
-          <div class="guide-desc">ดูรายการแปลงที่ถูกย้าย กดยกเลิกคืนค่ากลับกลุ่มเดิม หรือกด <b>"ส่งออก CSV"</b> เพื่อนำไปเปิดใน Excel ได้</div>
+          <div class="guide-title">🔄 3. จัดกลุ่มด่วน (Quick Reassign)</div>
+          <div class="guide-desc">เลือกกลุ่มเป้าหมาย แล้ว<b>คลิกที่แปลงบนแผนที่ได้โดยตรง</b> แปลงนั้นจะถูกย้ายเข้าสู่กลุ่มที่เลือกทันที</div>
         </div>
         <div class="guide-card">
-          <div class="guide-title">📏 4. ไม้บรรทัดวัดระยะทาง</div>
+          <div class="guide-title">📋 4. รายการย้าย & ส่งออก Excel</div>
+          <div class="guide-desc">ตรวจสอบประวัติการย้ายแปลง กดยกเลิกคืนค่ากลับกลุ่มเดิม หรือกด <b>"ส่งออก CSV"</b> เพื่อนำรายงานไปใช้งานต่อใน Excel</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-title">📏 5. ไม้บรรทัดวัดระยะทาง</div>
           <div class="guide-desc">กดปุ่มรูปไม้บรรทัดมุมขวาบน หรือกดจากในป๊อปอัปแปลง เพื่อจิ้มวัดระยะทางบนแผนที่เป็นเมตร/กิโลเมตร</div>
-        </div>
-        <div class="guide-card">
-          <div class="guide-title">🔍 5. ค้นหาและตัวกรอง</div>
-          <div class="guide-desc">พิมพ์รหัสแปลงหรือโควตาเพื่อซูมหาทันที หรือเลือกกรองเฉพาะผู้รับเหมา/นักเกษตรที่ต้องการ</div>
         </div>
       </div>
       <div class="modal-footer" style="justify-content: flex-end;">
-        <button id="btnGotIt" style="background:#1565C0; color:white; border:none; padding:8px 20px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:13px;">✅ เข้าใจแล้ว</button>
+        <button id="btnGotIt" style="background:#0284c7; color:white; border:none; padding:8px 22px; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);">✅ เข้าใจแล้ว</button>
       </div>
     </div>
   </div>
@@ -299,21 +421,21 @@
   <div id="logModal" class="modal-overlay">
     <div class="modal-box" onclick="event.stopPropagation();">
       <div class="modal-header">
-        <span style="font-weight:bold;">📋 ประวัติการย้ายแปลง (<span id="modalScenarioName"></span>)</span>
+        <span style="font-weight:700;">📋 ประวัติการย้ายแปลง (<span id="modalScenarioName"></span>)</span>
         <button id="btnCloseModal" style="background:none; border:none; color:white; font-size:18px; cursor:pointer;">✕</button>
       </div>
       <div class="modal-body">
-        <div id="emptyLogText" style="text-align:center; color:#888; padding:20px;">ยังไม่มีการย้ายกลุ่มแปลง</div>
+        <div id="emptyLogText" style="text-align:center; color:#94a3b8; padding:24px;">ยังไม่มีการย้ายกลุ่มแปลง</div>
         <table id="logTable" style="display:none;">
-          <thead><tr><th>รหัสแปลง</th><th>กลุ่มเดิม</th><th>➔ กลุ่มใหม่</th><th>จัดการ</th></tr></thead>
+          <thead><tr><th>รหัสแปลง</th><th>เนื้อที่ (ไร่)</th><th>กลุ่มเดิม</th><th>➔ กลุ่มใหม่</th><th>จัดการ</th></tr></thead>
           <tbody id="logTableBody"></tbody>
         </table>
       </div>
       <div class="modal-footer">
-        <button id="btnResetAllPlots" style="background:#E65100; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; display:none;">🔄 คืนค่าทั้งหมด</button>
+        <button id="btnResetAllPlots" style="background:#f97316; color:white; border:none; padding:7px 14px; border-radius:8px; cursor:pointer; font-weight:600; display:none;">🔄 คืนค่าทั้งหมด</button>
         <div style="display:flex; gap:8px; margin-left:auto;">
-          <button id="btnExportCSV" style="background:#2E7D32; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">📥 ส่งออก CSV</button>
-          <button id="btnCloseModalBtn" style="background:#888; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">ปิด</button>
+          <button id="btnExportCSV" style="background:#16a34a; color:white; border:none; padding:7px 14px; border-radius:8px; cursor:pointer; font-weight:600;">📥 ส่งออก CSV</button>
+          <button id="btnCloseModalBtn" style="background:#64748b; color:white; border:none; padding:7px 14px; border-radius:8px; cursor:pointer;">ปิด</button>
         </div>
       </div>
     </div>
@@ -336,42 +458,15 @@
     const allKnownSubKeys = new Set();
     const plotRegistry = {}; 
 
-    function movePlotInDOM(plot, oldSubKey, newSubKey) {
-      const plotLi = document.getElementById(plot.uniqueId);
-      if (!plotLi) return;
+    /* แปลงค่าตัวเลขเป็นทศนิยม 2 ตำแหน่งแบบปลอดภัย */
+    function safeFloat(val) {
+      if (val === null || val === undefined) return 0.0;
+      const num = parseFloat(String(val).replace(/,/g, ''));
+      return isNaN(num) ? 0.0 : num;
+    }
 
-      const oldCb = document.querySelector(`.cb-sub[data-key="${oldSubKey}"]`);
-      if (oldCb) {
-        const oldSubNode = oldCb.closest('.sub-node');
-        if (oldSubNode) {
-          const oldBadge = oldSubNode.querySelector('.badge');
-          if(oldBadge) oldBadge.innerText = Math.max(0, parseInt(oldBadge.innerText) - 1);
-        }
-        const oldMainNode = oldCb.closest('.group-node');
-        if (oldMainNode) {
-          const oldMainBadge = oldMainNode.querySelector('.group-header .badge');
-          if(oldMainBadge) oldMainBadge.innerText = Math.max(0, parseInt(oldMainBadge.innerText) - 1);
-        }
-      }
-
-      const newCb = document.querySelector(`.cb-sub[data-key="${newSubKey}"]`);
-      if (newCb) {
-        const newSubNode = newCb.closest('.sub-node');
-        if (newSubNode) {
-          const newPlotList = newSubNode.querySelector('.plot-list');
-          if(newPlotList) newPlotList.appendChild(plotLi);
-          
-          const newBadge = newSubNode.querySelector('.badge');
-          if(newBadge) newBadge.innerText = parseInt(newBadge.innerText) + 1;
-        }
-        const newMainNode = newCb.closest('.group-node');
-        if (newMainNode) {
-          const newMainBadge = newMainNode.querySelector('.group-header .badge');
-          if(newMainBadge) newMainBadge.innerText = parseInt(newMainBadge.innerText) + 1;
-        }
-      }
-
-      plotLi.innerHTML = `<span>📍 ${plot.name}</span>${plot.isMoved ? '<span class="badge-moved">ย้ายแล้ว</span>' : ''}`;
+    function formatNumber(num) {
+      return num.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     /* Scenario Storage */
@@ -452,7 +547,7 @@
       isMeasuring = !isMeasuring;
       const btn = document.getElementById('measureToggleBtn');
       if (isMeasuring) {
-        btn.style.background = '#e91e63'; btn.style.color = 'white';
+        btn.style.background = '#e11d48'; btn.style.color = 'white';
         measurePanel.style.display = 'flex'; map.getContainer().classList.add('measuring-mode'); map.closePopup();
       } else {
         btn.style.background = 'white'; btn.style.color = 'black';
@@ -464,12 +559,12 @@
     function calculateTotalDistance() { let t = 0; for(let i=0; i<measurePoints.length-1; i++) t += measurePoints[i].distanceTo(measurePoints[i+1]); return t; }
     function redrawMeasureLine() {
       if (measureLine) map.removeLayer(measureLine);
-      if (measurePoints.length > 1) measureLine = L.polyline(measurePoints, { color: '#E91E63', weight: 3.5, dashArray: '6, 8', opacity: 0.95 }).addTo(map);
+      if (measurePoints.length > 1) measureLine = L.polyline(measurePoints, { color: '#e11d48', weight: 3.5, dashArray: '6, 8', opacity: 0.95 }).addTo(map);
       measureTotalDist.innerText = formatDistance(calculateTotalDistance());
     }
     function addMeasurePoint(latlng) {
       measurePoints.push(latlng);
-      const m = L.circleMarker(latlng, { radius: 4.5, color: '#E91E63', fillColor: '#FFF', fillOpacity: 1, weight: 2 }).addTo(map);
+      const m = L.circleMarker(latlng, { radius: 4.5, color: '#e11d48', fillColor: '#FFF', fillOpacity: 1, weight: 2 }).addTo(map);
       measureMarkers.push(m);
       const dist = calculateTotalDistance();
       measureTotalDist.innerText = formatDistance(dist);
@@ -493,7 +588,7 @@
         const opt = document.createElement('option'); opt.value = id; opt.innerText = sc.name; if (id === currentScenarioId) opt.selected = true; sel.appendChild(opt);
       }
       document.getElementById('scenarioStatusBadge').innerText = currentScenarioId === 'original' ? 'แผนจริง' : 'โหมดจำลองแผน';
-      document.getElementById('scenarioStatusBadge').style.background = currentScenarioId === 'original' ? '#E0E0E0' : '#C8E6C9';
+      document.getElementById('scenarioStatusBadge').style.background = currentScenarioId === 'original' ? '#fde68a' : '#bbf7d0';
       document.getElementById('btnDeleteScenario').style.display = currentScenarioId === 'original' ? 'none' : 'block';
       document.getElementById('reassignCountBadge').innerText = Object.keys(scenarios[currentScenarioId]?.overrides || {}).length;
     }
@@ -540,6 +635,7 @@
       buildHierarchyUI(); populateContractorDropdown();
     }
 
+    /* ย้ายแปลงในโปรเจกต์ */
     window.transferPlotInScenario = function(plotId, newSubKey) {
       if (currentScenarioId === 'original') {
         if (!confirm('คุณอยู่ใน "แผนตั้งต้น" ต้องการสร้างโปรเจกต์ใหม่เพื่อบันทึกการย้ายหรือไม่?')) return;
@@ -556,23 +652,7 @@
       else scenarios[currentScenarioId].overrides[plotId] = newSubKey;
 
       saveScenariosToStorage(); 
-
-      plot.isMoved = (newSubKey !== plot.origSubKey);
-      plot.subKey = newSubKey;
-      const [newMainG, newSubG] = newSubKey.split(':::');
-      plot.mainGroup = newMainG;
-      plot.subGroup = newSubG;
-      plot.color = subColorMap[newSubKey];
-
-      movePlotInDOM(plot, oldSubKey, newSubKey);
-
-      if (subGroupLayers[oldSubKey] && subGroupLayers[oldSubKey].hasLayer(plot.layer)) {
-          subGroupLayers[oldSubKey].removeLayer(plot.layer);
-      }
-      if (!subGroupLayers[newSubKey]) subGroupLayers[newSubKey] = L.layerGroup().addTo(map);
-      subGroupLayers[newSubKey].addLayer(plot.layer);
-
-      plot.layer.bindPopup(createPopupContent(plot.name, plot.mainGroup, plot.subGroup, plot.color, plot.props, getPlotCenterLatLng(plot.layer), plot.uniqueId));
+      applyCurrentScenario(); // คำนวณสรุปยอดไร่สะสมและอัปเดตหน้าจอใหม่ทั้งหมด
 
       if (plot.layer.setStyle) { 
         plot.layer.setStyle({ color: '#FFD600', weight: 5, fillOpacity: 0.85 }); 
@@ -623,11 +703,13 @@
 
     function createPopupContent(name, groupName, subGroup, color, props, centerLatLng, plotId) {
       const plot = plotRegistry[plotId]; const isMoved = plot && plot.isMoved;
+      const raiVal = safeFloat(props['area_rai'] || props['พื้นที่ปลูก'] || 0);
       let c = `<div style="font-size: 13px;"><strong style="font-size: 15px; color: ${color};">📍 รหัสแปลง: ${name}</strong>`;
       if (isMoved) c += ` <span class="badge-moved">ย้ายกลุ่มแล้ว</span>`;
-      c += `<br/><span style="font-size: 12px; color: #555;"><b>กลุ่ม:</b> ${groupName} | <b>กลุ่มย่อย:</b> ${subGroup}</span>`;
+      c += `<br/><span style="font-size: 12px; color: #64748b;"><b>กลุ่ม:</b> ${groupName} | <b>กลุ่มย่อย:</b> ${subGroup}</span>`;
+      c += `<br/><span style="font-size: 12px; color: #047857; font-weight:700;">🌾 เนื้อที่: ${formatNumber(raiVal)} ไร่</span>`;
       
-      c += `<div class="transfer-box"><label style="font-weight:bold; font-size:11px; color:#33691E;">🔄 ย้ายไปกลุ่มอื่น:</label>
+      c += `<div class="transfer-box"><label style="font-weight:700; font-size:11px; color:#15803d;">🔄 ย้ายไปกลุ่มอื่น:</label>
             <select id="popupSel_${plotId}" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();">`;
       Array.from(allKnownSubKeys).sort().forEach(k => { const [m,s] = k.split(':::'); c += `<option value="${k}" ${k===plot.subKey ? 'selected':''}>${m} > ${s}</option>`; });
       
@@ -637,7 +719,7 @@
       c += `</div>`;
 
       if (centerLatLng) c += `<button class="btn-measure-popup" onclick="event.stopPropagation(); startMeasureFromPlot(${centerLatLng.lat}, ${centerLatLng.lng})">📏 เริ่มวัดระยะจากแปลงนี้</button>`;
-      c += `<hr style="margin:8px 0;border:none;border-top:1px solid #e0e0e0;"/>`;
+      c += `<hr style="margin:8px 0;border:none;border-top:1px solid #e2e8f0;"/>`;
       
       const ignored = ['name', 'description', 'main_grp', 'sub_grp', 'unique_id', 'contractor'];
       let rows = ''; 
@@ -648,7 +730,7 @@
           rows += `<tr><td>${label}</td><td>${valStr}</td></tr>`; 
         } 
       }
-      c += rows ? `<table>${rows}</table>` : `<p style="color:#777;font-size:11px;">ไม่มีข้อมูลเพิ่มเติม</p>`; 
+      c += rows ? `<table>${rows}</table>` : `<p style="color:#94a3b8;font-size:11px;">ไม่มีข้อมูลเพิ่มเติม</p>`; 
       return c + `</div>`;
     }
 
@@ -685,7 +767,7 @@
       }
     }
 
-    /* UI Building */
+    /* UI Building - คำนวณสรุปยอดไร่สะสม Real-time */
     function syncSelectAllBtn() {
       const allChecked = Array.from(document.querySelectorAll('.cb-group')).every(cb => cb.checked);
       document.getElementById('selectAllGroups').checked = allChecked; 
@@ -712,33 +794,82 @@
     }
 
     function buildHierarchyUI() {
-      const container = document.getElementById('treeContainer'); container.innerHTML = ''; let totalPlots = 0;
+      const container = document.getElementById('treeContainer'); container.innerHTML = ''; 
+      let totalPlots = 0;
+      let totalProjectRai = 0;
+
       Object.keys(treeData).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(mainGroup => {
-        const subGroups = treeData[mainGroup]; let gCount = 0; Object.keys(subGroups).forEach(s => gCount += subGroups[s].length); totalPlots += gCount;
+        const subGroups = treeData[mainGroup]; 
+        let gCount = 0; 
+        let gTotalRai = 0;
+
+        // คำนวณยอดไร่รวมของกลุ่มหลัก
+        Object.keys(subGroups).forEach(s => {
+          gCount += subGroups[s].length;
+          subGroups[s].forEach(p => {
+            const rai = safeFloat(p.props['area_rai'] || p.props['พื้นที่ปลูก'] || 0);
+            gTotalRai += rai;
+          });
+        });
+
+        totalPlots += gCount;
+        totalProjectRai += gTotalRai;
+
         const gLi = document.createElement('li'); gLi.className = 'group-node';
         
-        gLi.innerHTML = `<div class="group-header" style="position: sticky; top: -12px; z-index: 20; background: #f6f8fa;"><div class="node-left"><span class="caret">▶</span><input type="checkbox" checked class="cb-group" data-group="${mainGroup}" /><span>📁 ${mainGroup}</span></div><span class="badge">${gCount}</span></div><ul class="sub-list"></ul>`;
+        gLi.innerHTML = `
+          <div class="group-header">
+            <div class="node-left">
+              <span class="caret">▶</span>
+              <input type="checkbox" checked class="cb-group" data-group="${mainGroup}" />
+              <span>📁 ${mainGroup}</span>
+            </div>
+            <div class="badge-wrap">
+              <span class="badge-rai">${formatNumber(gTotalRai)} ไร่</span>
+              <span class="badge">${gCount}</span>
+            </div>
+          </div>
+          <ul class="sub-list"></ul>
+        `;
         const subUl = gLi.querySelector('.sub-list'), gHeader = gLi.querySelector('.group-header');
 
         Object.keys(subGroups).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(subGroup => {
           const plots = subGroups[subGroup], subKey = `${mainGroup}:::${subGroup}`, color = subColorMap[subKey];
           
+          // คำนวณยอดไร่รวมของกลุ่มย่อย
+          let subTotalRai = 0;
+          plots.forEach(p => {
+            subTotalRai += safeFloat(p.props['area_rai'] || p.props['พื้นที่ปลูก'] || 0);
+          });
+
           const sLi = document.createElement('li'); sLi.className = 'sub-node';
           sLi.innerHTML = `
-            <div class="sub-header" style="position: sticky; top: 25px; z-index: 15; background: #ffffff;">
+            <div class="sub-header">
               <div class="node-left" title="${subGroup}">
-                <span class="caret caret-sub">▶</span><input type="checkbox" checked class="cb-sub" data-key="${subKey}" />
-                <span class="color-dot" style="background:${color};" title="เปลี่ยนสี"></span><input type="color" class="color-picker-input" value="${color}">
+                <span class="caret caret-sub">▶</span>
+                <input type="checkbox" checked class="cb-sub" data-key="${subKey}" />
+                <span class="color-dot" style="background:${color};" title="เปลี่ยนสี"></span>
+                <input type="color" class="color-picker-input" value="${color}">
                 <span class="sub-title-text">📁 <b>${subGroup}</b></span>
               </div>
-              <span class="badge" style="font-size:10px;">${plots.length}</span>
-            </div><ul class="plot-list"></ul>`;
+              <div class="badge-wrap">
+                <span class="badge-rai" style="background:#f0fdf4;">${formatNumber(subTotalRai)} ไร่</span>
+                <span class="badge">${plots.length}</span>
+              </div>
+            </div>
+            <ul class="plot-list"></ul>
+          `;
           
           const pUl = sLi.querySelector('.plot-list'), sHeader = sLi.querySelector('.sub-header');
           plots.forEach(p => {
             const pLi = document.createElement('li'); pLi.id = p.uniqueId; pLi.className = 'plot-item'; 
-            pLi.innerHTML = `<span>📍 ${p.name}</span>${p.isMoved ? '<span class="badge-moved">ย้ายแล้ว</span>' : ''}`;
-            pLi.onclick = (e) => { e.stopPropagation(); focusPlot(p); if(window.innerWidth <= 768) closeSidebar(); }; pUl.appendChild(pLi);
+            const plotRai = safeFloat(p.props['area_rai'] || p.props['พื้นที่ปลูก'] || 0);
+            pLi.innerHTML = `
+              <span>📍 ${p.name} ${plotRai > 0 ? `<span style="font-size:10.5px; color:#047857; margin-left:3px;">(${formatNumber(plotRai)} ไร่)</span>` : ''}</span>
+              ${p.isMoved ? '<span class="badge-moved">ย้ายแล้ว</span>' : ''}
+            `;
+            pLi.onclick = (e) => { e.stopPropagation(); focusPlot(p); if(window.innerWidth <= 768) closeSidebar(); }; 
+            pUl.appendChild(pLi);
           });
           
           sHeader.onclick = (e) => { if(e.target.tagName==='INPUT' || e.target.classList.contains('color-dot'))return; const open = pUl.style.display==='block'; pUl.style.display=open?'none':'block'; sHeader.querySelector('.caret-sub').classList.toggle('open',!open); };
@@ -752,14 +883,28 @@
         gHeader.querySelector('.cb-group').onchange = function() { const chk=this.checked; subUl.querySelectorAll('.cb-sub').forEach(cb=>{cb.checked=chk; const k=cb.getAttribute('data-key'); if(chk)map.addLayer(subGroupLayers[k]); else map.removeLayer(subGroupLayers[k]); }); syncSelectAllBtn(); };
         container.appendChild(gLi);
       });
-      document.getElementById('totalPlotsCount').innerText = totalPlots;
+
+      // อัปเดตตัวเลข KPI บนการ์ดหลัก
+      document.getElementById('kpiTotalPlots').innerHTML = `${totalPlots.toLocaleString()} <span style="font-size:11px; font-weight:normal; color:#64748b;">แปลง</span>`;
+      document.getElementById('kpiTotalRai').innerHTML = `${formatNumber(totalProjectRai)} <span style="font-size:11px; font-weight:normal; color:#64748b;">ไร่</span>`;
     }
 
     /* Filter & Search */
     function populateContractorDropdown() {
       const sel = document.getElementById('contractorSelect'); sel.innerHTML = '<option value="">-- แสดงทั้งหมด --</option>';
-      const cMap = {}; searchIndex.forEach(p => { if(p.contractor && p.contractor!=='ไม่ระบุผู้รับเหมา') cMap[p.contractor] = (cMap[p.contractor]||0)+1; });
-      Object.keys(cMap).sort((a,b)=>a.localeCompare(b,'th')).forEach(c => sel.innerHTML += `<option value="${c}">${c} (${cMap[c]} แปลง)</option>`);
+      const cMap = {}; 
+      const cRaiMap = {};
+
+      searchIndex.forEach(p => { 
+        if(p.contractor && p.contractor!=='ไม่ระบุผู้รับเหมา') {
+          cMap[p.contractor] = (cMap[p.contractor]||0)+1;
+          const rai = safeFloat(p.props['area_rai'] || p.props['พื้นที่ปลูก'] || 0);
+          cRaiMap[p.contractor] = (cRaiMap[p.contractor]||0) + rai;
+        }
+      });
+      Object.keys(cMap).sort((a,b)=>a.localeCompare(b,'th')).forEach(c => {
+        sel.innerHTML += `<option value="${c}">${c} (${cMap[c]} แปลง | ${formatNumber(cRaiMap[c])} ไร่)</option>`;
+      });
     }
 
     document.getElementById('contractorSelect').addEventListener('change', function() {
@@ -768,16 +913,20 @@
       
       Object.keys(subGroupLayers).forEach(k => { if(map.hasLayer(subGroupLayers[k])) map.removeLayer(subGroupLayers[k]); });
       document.querySelectorAll('.cb-group, .cb-sub').forEach(cb => cb.checked = false);
-      let bounds = L.latLngBounds([]), mCount = 0, keys = new Set();
+      let bounds = L.latLngBounds([]), mCount = 0, mRai = 0, keys = new Set();
 
       searchIndex.forEach(p => {
         if(p.contractor === target) {
-          mCount++; keys.add(p.subKey); if(p.layer.getBounds && p.layer.getBounds().isValid()) bounds.extend(p.layer.getBounds());
+          mCount++;
+          mRai += safeFloat(p.props['area_rai'] || p.props['พื้นที่ปลูก'] || 0);
+          keys.add(p.subKey); if(p.layer.getBounds && p.layer.getBounds().isValid()) bounds.extend(p.layer.getBounds());
           if(p.layer.setStyle){ p.layer.setStyle({color:'#FFD600', weight:4, fillColor:'#FFEA00', fillOpacity:0.8}); setTimeout(()=>p.layer.setStyle({color:p.color,weight:1.5,opacity:0.9,fillColor:p.color,fillOpacity:0.35}), 3000); }
         }
       });
       keys.forEach(k => { if(!map.hasLayer(subGroupLayers[k])) map.addLayer(subGroupLayers[k]); const cb=document.querySelector(`.cb-sub[data-key="${k}"]`); if(cb){cb.checked=true; cb.closest('.group-node').querySelector('.cb-group').checked=true;} });
-      countLb.innerText = `(${mCount} แปลง)`; if(bounds.isValid()) map.fitBounds(bounds, {padding:[40,40], maxZoom:17}); syncSelectAllBtn();
+      countLb.innerText = `(${mCount} แปลง | ${formatNumber(mRai)} ไร่)`; 
+      if(bounds.isValid()) map.fitBounds(bounds, {padding:[40,40], maxZoom:17}); 
+      syncSelectAllBtn();
     });
 
     const searchInp = document.getElementById('searchInput'), searchDrop = document.getElementById('searchDropdown');
@@ -785,12 +934,13 @@
       const kw = this.value.trim().toLowerCase(); searchDrop.innerHTML = '';
       if(!kw) { searchDrop.style.display = 'none'; return; }
       const match = searchIndex.filter(i => i.name.toLowerCase().includes(kw) || i.mainGroup.toLowerCase().includes(kw) || i.subGroup.toLowerCase().includes(kw) || Object.values(i.props).some(v=>v&&String(v).toLowerCase().includes(kw)));
-      if(match.length===0){ searchDrop.innerHTML = `<div class="search-item" style="color:#888;">ไม่พบข้อมูล</div>`; searchDrop.style.display = 'block'; return; }
+      if(match.length===0){ searchDrop.innerHTML = `<div class="search-item" style="color:#94a3b8;">ไม่พบข้อมูล</div>`; searchDrop.style.display = 'block'; return; }
       match.slice(0,15).forEach(p => {
         const d = document.createElement('div'); d.className = 'search-item'; 
         const quota = p.props['quota_id'] || p.props['โควตาชาวไร่'] || '';
         const farmer = p.props['farmer_nm'] || p.props['ชื่อ-นามสกุล'] || '';
-        d.innerHTML = `<b>${p.name}</b> ${quota ? `[โควตา: ${quota}]` : ''} ${farmer ? `(${farmer})` : ''} <span style="color:#666; font-size:11px;">[${p.mainGroup} > ${p.subGroup}]</span>`;
+        const rai = safeFloat(p.props['area_rai'] || p.props['พื้นที่ปลูก'] || 0);
+        d.innerHTML = `<b>${p.name}</b> ${quota ? `[โควตา: ${quota}]` : ''} ${farmer ? `(${farmer})` : ''} - <b style="color:#047857;">${formatNumber(rai)} ไร่</b> <span style="color:#64748b; font-size:11px;">[${p.mainGroup} > ${p.subGroup}]</span>`;
         d.onclick = () => { searchDrop.style.display = 'none'; searchInp.value = p.name; focusPlot(p); scrollTreeToPlot(p.uniqueId, false); if(window.innerWidth<=768) closeSidebar(); }; searchDrop.appendChild(d);
       }); searchDrop.style.display = 'block';
     }; document.addEventListener('click', e => { if(!e.target.closest('.search-box')) searchDrop.style.display='none'; });
@@ -824,11 +974,13 @@
         movedIds.forEach(id => {
           const p = plotRegistry[id]; if(!p)return;
           const tr = document.createElement('tr');
+          const rai = safeFloat(p.props['area_rai'] || p.props['พื้นที่ปลูก'] || 0);
           tr.innerHTML = `
-            <td><a href="#" onclick="logModal.style.display='none'; focusPlot(plotRegistry['${id}']); return false;" style="color:#1565C0; text-decoration:underline; font-weight:bold;">${p.name}</a></td>
-            <td style="color:#c62828;">${p.origSubKey.replace(':::', ' > ')}</td>
-            <td style="color:#2e7d32; font-weight:bold;">${p.subKey.replace(':::', ' > ')}</td>
-            <td><button onclick="resetSinglePlotToOriginal('${id}'); this.closest('tr').remove(); if(Object.keys(scenarios[currentScenarioId].overrides).length===0) { document.getElementById('emptyLogText').style.display='block'; document.getElementById('logTable').style.display='none'; document.getElementById('btnResetAllPlots').style.display='none'; }" style="background:#FF9800;color:white;border:none;padding:2px 6px;border-radius:4px;cursor:pointer;">คืนค่า</button></td>
+            <td><a href="#" onclick="logModal.style.display='none'; focusPlot(plotRegistry['${id}']); return false;" style="color:#0284c7; text-decoration:underline; font-weight:700;">${p.name}</a></td>
+            <td style="color:#047857; font-weight:600;">${formatNumber(rai)}</td>
+            <td style="color:#e11d48;">${p.origSubKey.replace(':::', ' > ')}</td>
+            <td style="color:#16a34a; font-weight:700;">${p.subKey.replace(':::', ' > ')}</td>
+            <td><button onclick="resetSinglePlotToOriginal('${id}'); this.closest('tr').remove(); if(Object.keys(scenarios[currentScenarioId].overrides).length===0) { document.getElementById('emptyLogText').style.display='block'; document.getElementById('logTable').style.display='none'; document.getElementById('btnResetAllPlots').style.display='none'; }" style="background:#f59e0b;color:white;border:none;padding:3px 8px;border-radius:6px;cursor:pointer;font-weight:600;">คืนค่า</button></td>
           `;
           tBody.appendChild(tr);
         });
@@ -850,7 +1002,14 @@
 
     document.getElementById('btnExportCSV').onclick = () => {
       const movedIds = Object.keys(scenarios[currentScenarioId]?.overrides || {}); if(movedIds.length===0){ alert('ไม่มีรายการย้าย'); return; }
-      let csv = '\uFEFFรหัสแปลง,กลุ่มเดิม,กลุ่มใหม่,สถานะ\n'; movedIds.forEach(id => { const p=plotRegistry[id]; if(p) csv += `"${p.name}","${p.origSubKey.replace(':::', ' > ')}","${p.subKey.replace(':::', ' > ')}","ย้ายแล้ว"\n`; });
+      let csv = '\uFEFFรหัสแปลง,เนื้อที่(ไร่),กลุ่มเดิม,กลุ่มใหม่,สถานะ\n'; 
+      movedIds.forEach(id => { 
+        const p=plotRegistry[id]; 
+        if(p) {
+          const rai = safeFloat(p.props['area_rai'] || p.props['พื้นที่ปลูก'] || 0);
+          csv += `"${p.name}","${rai.toFixed(2)}","${p.origSubKey.replace(':::', ' > ')}","${p.subKey.replace(':::', ' > ')}","ย้ายแล้ว"\n`; 
+        }
+      });
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `รายการย้าย_${scenarios[currentScenarioId].name.replace(/[^a-zA-Z0-9ก-๙]/g, '_')}.csv`; a.click();
     };
 
