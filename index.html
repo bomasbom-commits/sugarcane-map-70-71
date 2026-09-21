@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>กลุ่มแปลงอ้อยรถไถ</title>
+  <title>กลุ่มแปลงอ้อยรถไถ (ระบบจำลองเพื่อการวางแผน)</title>
   <meta property="og:title" content="แปลงอ้อยรถไถ">
   <meta property="og:description" content="ระบบจัดการแปลงอ้อย จัดกลุ่มคิว และวางแผนการตัด">
 
@@ -76,6 +76,14 @@
       position: relative; background: #ffffff; 
     }
 
+    /* กล่องหมายเหตุจำลองข้อมูล */
+    .simulation-notice {
+      background: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px;
+      padding: 7px 10px; font-size: 11px; color: #8D6E63; line-height: 1.4;
+      display: flex; align-items: flex-start; gap: 6px;
+    }
+    .simulation-notice b { color: #E65100; }
+
     /* กล่องสรุปภาพรวม KPI (แปลง & ไร่รวม) */
     .kpi-container {
       display: flex; gap: 8px; margin-bottom: 2px;
@@ -121,6 +129,7 @@
     .tree-title { font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
     .tree-root { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     
+    /* Sticky Scrolling สำหรับ Header กลุ่มหลักและกลุ่มย่อย */
     .group-node { 
       border: 1px solid #e2e8f0; 
       border-radius: 10px; 
@@ -185,7 +194,6 @@
     .caret { transition: transform 0.2s; font-size: 9px; color: #94a3b8; display: inline-block; width: 12px; flex-shrink: 0; }
     .caret.open { transform: rotate(90deg); }
     
-    /* ป้ายตัวเลขสถิติ ไร่/แปลง */
     .badge-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
     .badge { background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; }
     .badge-rai { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 10px; font-size: 9.5px; font-weight: 700; }
@@ -223,14 +231,15 @@
     .measuring-mode .leaflet-popup-pane { display: none !important; }
     .measuring-mode, .measuring-mode * { cursor: crosshair !important; }
 
+    /* Modal Styling */
     .modal-overlay { 
       display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-      background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); 
+      background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); 
       z-index: 3000; align-items: center; justify-content: center; 
     }
     .modal-box { 
-      background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
-      border-radius: 16px; width: 92%; max-width: 660px; max-height: 82vh; 
+      background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); 
+      border-radius: 16px; width: 92%; max-width: 660px; max-height: 84vh; 
       display: flex; flex-direction: column; overflow: hidden; 
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid rgba(255,255,255,0.6);
       animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); 
@@ -320,6 +329,14 @@
     </div>
 
     <div class="sidebar-controls">
+      <!-- กล่องหมายเหตุจำลองระบบ -->
+      <div class="simulation-notice">
+        <span>⚠️</span>
+        <div>
+          <b>หมายเหตุ:</b> หน้านี้เป็นระบบจำลองเพื่อการวางแผน <u>ข้อมูลจริงในระบบหลักยังไม่เปลี่ยนแปลง</u> โดยจะนำผลการจัดกลุ่มไปใช้ประกอบการจัดทำระบบจริงต่อไป
+        </div>
+      </div>
+
       <!-- การ์ดสรุป KPI ด้านบนสุด -->
       <div class="kpi-container">
         <div class="kpi-card">
@@ -382,25 +399,34 @@
 
   <div id="map"></div>
 
-  <!-- Modal แนะนำฟังก์ชันการใช้งาน -->
-  <div id="helpModal" class="modal-overlay">
+  <!-- Modal แนะนำฟังก์ชันการใช้งาน (กำหนด style="display: flex;" เพื่อให้เด้งทันทีตั้งแต่เริ่ม) -->
+  <div id="helpModal" class="modal-overlay" style="display: flex;">
     <div class="modal-box" onclick="event.stopPropagation();">
       <div class="modal-header">
-        <span style="font-weight:700; font-size:15px;">📖 คำอธิบายฟังก์ชันการใช้งาน</span>
+        <span style="font-weight:700; font-size:15px;">📖 คำอธิบายระบบและการใช้งาน</span>
         <button id="btnCloseHelp" style="background:none; border:none; color:white; font-size:20px; cursor:pointer; line-height:1;">✕</button>
       </div>
       <div class="modal-body">
+        
+        <!-- แถบหมายเหตุสำคัญในหน้าคู่มือ -->
+        <div style="background:#FFF3E0; border:1px solid #FFE0B2; border-radius:10px; padding:12px 14px; margin-bottom:14px; display:flex; gap:10px; align-items:flex-start;">
+          <span style="font-size:20px;">⚠️</span>
+          <div style="font-size:12.5px; color:#E65100; line-height:1.5;">
+            <b>หมายเหตุชี้แจง:</b> ระบบนี้เป็น <u>โปรแกรมจำลองเพื่อการวางแผนและทดลองจัดกลุ่มแปลง</u> ข้อมูลจริงในระบบฐานข้อมูลหลักยังไม่มีการแก้ไขเปลี่ยนแปลง โดยข้อมูลและแผนงานที่ได้จากการจำลองนี้จะถูกนำไปใช้ประกอบการจัดทำและพัฒนาระบบจริงต่อไป
+          </div>
+        </div>
+
         <div class="guide-card">
-          <div class="guide-title">📁 1. โปรเจกต์ / แผนงาน (Scenario)</div>
-          <div class="guide-desc">ใช้จำลองการจัดสรรแปลงใหม่โดยไม่กระทบข้อมูลจริง สามารถสร้างแผนใหม่เพื่อทดลองย้ายแปลงเปรียบเทียบยอดไร่สะสมได้ทันที</div>
+          <div class="guide-title">📁 1. โปรเจกต์ / แผนงาน (Scenario Simulator)</div>
+          <div class="guide-desc">ใช้จำลองการจัดสรรแปลงใหม่โดยไม่กระทบข้อมูลจริง กด <b>"+ สร้างแผนใหม่"</b> เพื่อทดลองย้ายแปลงเปรียบเทียบยอดไร่สะสมได้ทันที</div>
         </div>
         <div class="guide-card">
           <div class="guide-title">🌾 2. ระบบคำนวณยอดไร่สะสม Real-time</div>
-          <div class="guide-desc">ระบบจะรวมพื้นที่ปลูก (ไร่) ของแต่ละแปลงเข้าสู่กลุ่มย่อยและกลุ่มหลักโดยอัตโนมัติ หากมีการย้ายแปลง ตัวเลขจะคำนวณปรับปรุงใหม่ทันที</div>
+          <div class="guide-desc">ระบบจะรวมเนื้อที่ปลูก (ไร่) ของแต่ละแปลงเข้าสู่กลุ่มย่อยและกลุ่มหลักโดยอัตโนมัติ เมื่อมีการย้ายแปลงตัวเลขจะคำนวณปรับปรุงใหม่ทันที</div>
         </div>
         <div class="guide-card">
           <div class="guide-title">🔄 3. จัดกลุ่มด่วน (Quick Reassign)</div>
-          <div class="guide-desc">เลือกกลุ่มเป้าหมาย แล้ว<b>คลิกที่แปลงบนแผนที่ได้โดยตรง</b> แปลงนั้นจะถูกย้ายเข้าสู่กลุ่มที่เลือกทันที</div>
+          <div class="guide-desc">เลือกกลุ่มเป้าหมาย แล้ว<b>คลิกที่แปลงบนแผนที่ได้โดยตรง</b> แปลงนั้นจะถูกย้ายเข้าสู่กลุ่มที่เลือกทันที จัดกลุ่มแปลงได้สะดวกรวดเร็ว</div>
         </div>
         <div class="guide-card">
           <div class="guide-title">📋 4. รายการย้าย & ส่งออก Excel</div>
@@ -412,7 +438,7 @@
         </div>
       </div>
       <div class="modal-footer" style="justify-content: flex-end;">
-        <button id="btnGotIt" style="background:#0284c7; color:white; border:none; padding:8px 22px; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);">✅ เข้าใจแล้ว</button>
+        <button id="btnGotIt" style="background:#0284c7; color:white; border:none; padding:9px 24px; border-radius:8px; cursor:pointer; font-weight:700; font-size:13px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);">✅ เข้าใจแล้ว เริ่มใช้งาน</button>
       </div>
     </div>
   </div>
@@ -458,7 +484,6 @@
     const allKnownSubKeys = new Set();
     const plotRegistry = {}; 
 
-    /* แปลงค่าตัวเลขเป็นทศนิยม 2 ตำแหน่งแบบปลอดภัย */
     function safeFloat(val) {
       if (val === null || val === undefined) return 0.0;
       const num = parseFloat(String(val).replace(/,/g, ''));
@@ -652,7 +677,7 @@
       else scenarios[currentScenarioId].overrides[plotId] = newSubKey;
 
       saveScenariosToStorage(); 
-      applyCurrentScenario(); // คำนวณสรุปยอดไร่สะสมและอัปเดตหน้าจอใหม่ทั้งหมด
+      applyCurrentScenario();
 
       if (plot.layer.setStyle) { 
         plot.layer.setStyle({ color: '#FFD600', weight: 5, fillOpacity: 0.85 }); 
@@ -803,7 +828,6 @@
         let gCount = 0; 
         let gTotalRai = 0;
 
-        // คำนวณยอดไร่รวมของกลุ่มหลัก
         Object.keys(subGroups).forEach(s => {
           gCount += subGroups[s].length;
           subGroups[s].forEach(p => {
@@ -836,7 +860,6 @@
         Object.keys(subGroups).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).forEach(subGroup => {
           const plots = subGroups[subGroup], subKey = `${mainGroup}:::${subGroup}`, color = subColorMap[subKey];
           
-          // คำนวณยอดไร่รวมของกลุ่มย่อย
           let subTotalRai = 0;
           plots.forEach(p => {
             subTotalRai += safeFloat(p.props['area_rai'] || p.props['พื้นที่ปลูก'] || 0);
@@ -884,7 +907,6 @@
         container.appendChild(gLi);
       });
 
-      // อัปเดตตัวเลข KPI บนการ์ดหลัก
       document.getElementById('kpiTotalPlots').innerHTML = `${totalPlots.toLocaleString()} <span style="font-size:11px; font-weight:normal; color:#64748b;">แปลง</span>`;
       document.getElementById('kpiTotalRai').innerHTML = `${formatNumber(totalProjectRai)} <span style="font-size:11px; font-weight:normal; color:#64748b;">ไร่</span>`;
     }
@@ -1117,13 +1139,6 @@
           map.setView([14.88, 103.49], 12);
         }
 
-        if (!localStorage.getItem('sugar_cane_help_seen')) {
-          setTimeout(() => {
-            helpModal.style.display = 'flex';
-            localStorage.setItem('sugar_cane_help_seen', 'true');
-          }, 800);
-        }
-
       } catch (err) {
         console.error('GeoJSON Loading error:', err);
         document.getElementById('errorMessage').style.display = 'block';
@@ -1131,6 +1146,12 @@
         pBox.style.display = 'none';
       }
     }
+
+    // สั่งเปิดคู่มือทันทีที่ DOM พร้อม
+    document.addEventListener('DOMContentLoaded', () => {
+      const hModal = document.getElementById('helpModal');
+      if (hModal) hModal.style.display = 'flex';
+    });
 
     loadGeoJsonFile();
   </script>
